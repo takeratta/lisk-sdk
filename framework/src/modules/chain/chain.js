@@ -136,6 +136,7 @@ module.exports = class Chain {
 				build: versionBuild,
 				config: self.options,
 				genesisBlock: { block: self.options.genesisBlock },
+				registeredTransactions: self.options.registeredTransactions,
 				schema: new ZSchema(),
 				sequence: new Sequence({
 					onWarning(current) {
@@ -181,6 +182,7 @@ module.exports = class Chain {
 
 			// Ready to bind modules
 			scope.logic.peers.bindModules(scope.modules);
+			scope.logic.block.bindModules(scope.modules);
 
 			this.channel.subscribe('app:state:updated', event => {
 				Object.assign(scope.applicationState, event.data);

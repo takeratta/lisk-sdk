@@ -7,6 +7,14 @@ const {
 	/* eslint-disable import/no-unresolved */
 } = require('lisk-framework');
 
+const constantsSchema = require('../../framework/src/controller/schema/constants');
+
+const {
+	DappTransaction,
+	InTransferTransaction,
+	OutTransferTransaction,
+} = require('./transactions');
+
 const packageJSON = require('../package');
 
 const appConfig = {
@@ -80,6 +88,20 @@ try {
 		customConfig,
 		appConfig,
 	]);
+
+	const constants = validator.parseEnvArgAndValidate(
+		constantsSchema.constants,
+		{}
+	);
+
+	const { TRANSACTION_TYPES } = constants;
+
+	app.registerTransaction(TRANSACTION_TYPES.DAPP, DappTransaction);
+	app.registerTransaction(TRANSACTION_TYPES.IN_TRANSFER, InTransferTransaction);
+	app.registerTransaction(
+		TRANSACTION_TYPES.OUT_TRANSFER,
+		OutTransferTransaction
+	);
 
 	app.overrideModuleOptions('chain', { exceptions });
 

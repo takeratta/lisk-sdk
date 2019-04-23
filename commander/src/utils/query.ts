@@ -80,7 +80,7 @@ export const query = async (
 							handleResponse(endpoint, res, param.placeholder),
 						),
 				),
-			)
+		  )
 		: client[endpoint]
 				.get(parameters.query)
 				.then((res: APIResponse) =>

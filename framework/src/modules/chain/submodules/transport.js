@@ -30,6 +30,7 @@ const {
 	MAX_PEERS,
 	MAX_SHARED_TRANSACTIONS,
 } = global.constants;
+
 // Private fields
 let modules;
 let library;
@@ -67,7 +68,7 @@ class Transport {
 			balancesSequence: scope.balancesSequence,
 			logic: {
 				block: scope.logic.block,
-				transaction: scope.logic.transaction,
+				initTransaction: scope.logic.initTransaction,
 				peers: scope.logic.peers,
 			},
 			config: {
@@ -91,8 +92,9 @@ class Transport {
 			scope.config.broadcasts,
 			scope.config.forging.force,
 			scope.logic.peers,
-			scope.logic.transaction,
-			scope.components.logger
+			scope.logic.initTransaction,
+			scope.components.logger,
+			scope.components.storage
 		);
 
 		setImmediate(cb, null, self);
@@ -144,7 +146,7 @@ __private.receiveSignatures = function(signatures = []) {
 };
 
 /**
- * Validates signature with schema and calls processSignature.
+ * Validates signature with schema and calls getTransactionAndProcessSignature.
  *
  * @private
  * @param {Object} query
@@ -153,14 +155,14 @@ __private.receiveSignatures = function(signatures = []) {
  * @returns {setImmediateCallback} cb, err
  * @todo Add description for the params
  */
-__private.receiveSignature = function(query, cb) {
-	library.schema.validate(query, definitions.Signature, err => {
+__private.receiveSignature = function(signature, cb) {
+	library.schema.validate(signature, definitions.Signature, err => {
 		if (err) {
 			return setImmediate(cb, `Invalid signature body ${err[0].message}`);
 		}
 
-		return modules.multisignatures.processSignature(
-			query,
+		return modules.multisignatures.getTransactionAndProcessSignature(
+			signature,
 			processSignatureErr => {
 				if (processSignatureErr) {
 					return setImmediate(
@@ -215,32 +217,41 @@ __private.receiveTransactions = function(
  * @todo Add description for the params
  */
 __private.receiveTransaction = function(
-	transaction,
+	transactionJSON,
 	nonce,
 	extraLogMessage,
 	cb
 ) {
-	const id = transaction ? transaction.id : 'null';
-
+	const id = transactionJSON ? transactionJSON.id : 'null';
+	let transaction;
 	try {
-		// This sanitizes the transaction object and then validates it.
-		// Throws an error if validation fails.
-		transaction = library.logic.transaction.objectNormalize(transaction);
-	} catch (e) {
+		transaction = library.logic.initTransaction.jsonRead(transactionJSON);
+		const { errors } = transaction.validate();
+		if (errors.length > 0) {
+			throw errors;
+		}
+	} catch (errors) {
+		const error = errors.length > 0 ? errors[0] : errors;
 		library.logger.debug('Transaction normalization failed', {
 			id,
-			err: e.toString(),
+			err: error.toString(),
 			module: 'transport',
 			transaction,
 		});
 
-		__private.removePeer({ nonce, code: 'ETRANSACTION' }, extraLogMessage);
+		__private.removePeer(
+			{
+				nonce,
+				code: 'ETRANSACTION',
+			},
+			extraLogMessage
+		);
 
-		return setImmediate(cb, `Invalid transaction body - ${e.toString()}`);
+		return setImmediate(cb, `${error.toString()}`);
 	}
 
 	if (transaction.requesterPublicKey) {
-		return setImmediate(cb, 'Multisig request is not allowed');
+		return setImmediate(cb, new Error('Multisig request is not allowed'));
 	}
 
 	return library.balancesSequence.add(balancesSequenceCb => {
@@ -337,7 +348,12 @@ Transport.prototype.onSignature = function(signature, broadcast) {
 	if (broadcast && !__private.broadcaster.maxRelays(signature)) {
 		__private.broadcaster.enqueue(
 			{},
-			{ api: 'postSignatures', data: { signature } }
+			{
+				api: 'postSignatures',
+				data: {
+					signature,
+				},
+			}
 		);
 		library.channel.publish('chain:signature:change', signature);
 	}
@@ -358,7 +374,12 @@ Transport.prototype.onUnconfirmedTransaction = function(
 	if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
 		__private.broadcaster.enqueue(
 			{},
-			{ api: 'postTransactions', data: { transaction } }
+			{
+				api: 'postTransactions',
+				data: {
+					transaction,
+				},
+			}
 		);
 		library.channel.publish('chain:transactions:change', transaction);
 	}
@@ -383,7 +404,9 @@ Transport.prototype.broadcastHeaders = cb => {
 
 	library.logger.debug(
 		'Transport->broadcastHeaders: Broadcasting headers to remote peers',
-		{ count: peers.length }
+		{
+			count: peers.length,
+		}
 	);
 
 	// Execute remote procedure updateMyself for every peer
@@ -394,12 +417,17 @@ Transport.prototype.broadcastHeaders = cb => {
 				if (err) {
 					library.logger.debug(
 						'Transport->broadcastHeaders: Failed to notify peer about self',
-						{ peer: peer.string, err }
+						{
+							peer: peer.string,
+							err,
+						}
 					);
 				} else {
 					library.logger.debug(
 						'Transport->broadcastHeaders: Successfully notified peer about self',
-						{ peer: peer.string }
+						{
+							peer: peer.string,
+						}
 					);
 				}
 				return eachCb();
@@ -453,7 +481,13 @@ Transport.prototype.onBroadcastBlock = function(block, broadcast) {
 		{
 			broadhash,
 		},
-		{ api: 'postBlock', data: { block }, immediate: true }
+		{
+			api: 'postBlock',
+			data: {
+				block,
+			},
+			immediate: true,
+		}
 	);
 };
 
@@ -535,10 +569,15 @@ Transport.prototype.shared = {
 					return setImmediate(cb, 'Invalid block id sequence');
 				}
 
-				return library.storage.entities.Block.get({ id: escapedIds[0] })
+				return library.storage.entities.Block.get({
+					id: escapedIds[0],
+				})
 					.then(row => {
 						if (!row.length > 0) {
-							return setImmediate(cb, null, { success: true, common: null });
+							return setImmediate(cb, null, {
+								success: true,
+								common: null,
+							});
 						}
 
 						const {
@@ -548,9 +587,17 @@ Transport.prototype.shared = {
 							timestamp,
 						} = row[0];
 
-						const parsedRow = { id, height, previousBlock, timestamp };
+						const parsedRow = {
+							id,
+							height,
+							previousBlock,
+							timestamp,
+						};
 
-						return setImmediate(cb, null, { success: true, common: parsedRow });
+						return setImmediate(cb, null, {
+							success: true,
+							common: parsedRow,
+						});
 					})
 					.catch(getOneError => {
 						library.logger.error(getOneError.stack);
@@ -592,7 +639,10 @@ Transport.prototype.shared = {
 						} catch (e) {
 							library.logger.error(
 								'Transport->blocks: Failed to convert data field to UTF-8',
-								{ block, error: e }
+								{
+									block,
+									error: e,
+								}
 							);
 						}
 					}
@@ -649,7 +699,10 @@ Transport.prototype.shared = {
 						block: query.block,
 					});
 
-					__private.removePeer({ nonce: query.nonce, code: 'EBLOCK' });
+					__private.removePeer({
+						nonce: query.nonce,
+						code: 'EBLOCK',
+					});
 				}
 				return library.bus.message('receiveBlock', block);
 			}
@@ -669,10 +722,19 @@ Transport.prototype.shared = {
 			? modules.peers.list
 			: modules.peers.shared.getPeers;
 		peersFinder(
-			Object.assign({}, { limit: MAX_PEERS }, req.query),
+			Object.assign(
+				{},
+				{
+					limit: MAX_PEERS,
+				},
+				req.query
+			),
 			(err, peers) => {
 				peers = !err ? peers : [];
-				return setImmediate(cb, null, { success: !err, peers });
+				return setImmediate(cb, null, {
+					success: !err,
+					peers,
+				});
 			}
 		);
 	},
@@ -731,9 +793,14 @@ Transport.prototype.shared = {
 	postSignature(query, cb) {
 		__private.receiveSignature(query.signature, err => {
 			if (err) {
-				return setImmediate(cb, null, { success: false, message: err });
+				return setImmediate(cb, null, {
+					success: false,
+					message: err,
+				});
 			}
-			return setImmediate(cb, null, { success: true });
+			return setImmediate(cb, null, {
+				success: true,
+			});
 		});
 	},
 
@@ -783,7 +850,11 @@ Transport.prototype.shared = {
 				}
 				return setImmediate(__cb);
 			},
-			() => setImmediate(cb, null, { success: true, signatures })
+			() =>
+				setImmediate(cb, null, {
+					success: true,
+					signatures,
+				})
 		);
 	},
 
@@ -819,7 +890,10 @@ Transport.prototype.shared = {
 			query.extraLogMessage,
 			(err, id) => {
 				if (err) {
-					return setImmediate(cb, null, { success: false, message: err });
+					return setImmediate(cb, null, {
+						success: false,
+						message: err,
+					});
 				}
 				return setImmediate(cb, null, {
 					success: true,
@@ -913,7 +987,7 @@ Transport.prototype.internal = {
 					: new PeerUpdateError(
 							updateResult,
 							failureCodes.errorMessages[updateResult]
-						)
+					  )
 			);
 		});
 	},
