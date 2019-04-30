@@ -108,6 +108,7 @@ class Transaction {
 		// TODO: remove after https://github.com/LiskHQ/lisk/issues/2424
 		this.assetDbReadMap = new Map([
 			[0, transferAsset],
+			[9, transferAsset],
 			[1, signatureAsset],
 			[2, delegateAsset],
 			[3, voteAsset],
@@ -177,14 +178,17 @@ class Transaction {
 	}
 
 	jsonRead(rawTx) {
+
 		const TransactionClass = this.transactionClassMap.get(rawTx.type);
 
 		if (!TransactionClass) {
-			throw new Error('Transaction type not found.');
+			throw new Error('Transaction type not found.' );
 		}
 
 		return new TransactionClass(rawTx);
 	}
 }
+
+
 
 module.exports = Transaction;

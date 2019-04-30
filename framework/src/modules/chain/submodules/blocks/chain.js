@@ -102,7 +102,7 @@ Chain.prototype.saveGenesisBlock = function(cb) {
 			const block = {
 				...library.genesisBlock.block,
 				transactions: library.genesisBlock.block.transactions.map(transaction =>
-					library.logic.initTransaction.jsonRead(transaction)
+					transaction
 				),
 			};
 			return self.saveBlock(block, err => setImmediate(cb, err));
@@ -149,7 +149,7 @@ Chain.prototype.saveBlock = function(block, cb, tx) {
 		if (parsedBlock.transactions.length) {
 			promises.push(
 				library.storage.entities.Transaction.create(
-					parsedBlock.transactions.map(transaction => transaction.toJSON()),
+					parsedBlock.transactions.map(transaction => transaction),
 					{},
 					saveBlockBatchTx
 				)

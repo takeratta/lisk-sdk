@@ -22,6 +22,33 @@
 	  "id": "1465651642158264047"
 	},
 	{
+	  "type": 9,
+	  "amount": "100000000000000",
+	  "fee": "0",
+	  "timestamp": 0,
+	  "recipientId": "10881167371402274308L",
+	  "senderId": "16313739661670634666L",
+	  "senderPublicKey": "c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
+	  "signature": "f94904f5117c847f2a7a1ce4240bf1bf0fb9defcae0d3c9f949202c0bf9fbb39f390c8e6e29dec95140d4ec05fc2e5070802453bdcd223355d4e1f4ba3bf5f0d",
+	  "id": "14531036218001727508"
+	},
+	{
+	  "type": 2,
+	  "amount": "0",
+	  "fee": "0",
+	  "timestamp": 0,
+	  "recipientId": null,
+	  "senderId": "10881167371402274308L",
+	  "senderPublicKey": "addb0e15a44b0fdc6ff291be28d8c98f5551d0cd9218d749e30ddb87c6e31ca9",
+	  "asset": {
+		"delegate": {
+		  "username": "genesis_100"
+		}
+	  },
+	  "signature": "5495bea66b026b0d6b72bab8611fca9c655c1f023267f3c51453c950aa3d0e0eb08b0bc04e6355909abd75cd1d4df8c3048a55c3a98d0719b4b71e5d527e580a",
+	  "id": "8500285156990763245"
+	},
+	{
 	  "type": 2,
 	  "amount": "0",
 	  "fee": "0",
@@ -1604,22 +1631,6 @@
 	  },
 	  "signature": "8e1f6ade038dd982da28952a4931cc03bdbf76f10f99262c53a293b60459f4bad0069edf9ddb810b3b1a9f42616417b6bb886b8b9e5fc79573562a9c3d7ced02",
 	  "id": "16663544868599417891"
-	},
-	{
-	  "type": 2,
-	  "amount": "0",
-	  "fee": "0",
-	  "timestamp": 0,
-	  "recipientId": null,
-	  "senderId": "10881167371402274308L",
-	  "senderPublicKey": "addb0e15a44b0fdc6ff291be28d8c98f5551d0cd9218d749e30ddb87c6e31ca9",
-	  "asset": {
-		"delegate": {
-		  "username": "genesis_100"
-		}
-	  },
-	  "signature": "5495bea66b026b0d6b72bab8611fca9c655c1f023267f3c51453c950aa3d0e0eb08b0bc04e6355909abd75cd1d4df8c3048a55c3a98d0719b4b71e5d527e580a",
-	  "id": "8500285156990763245"
 	},
 	{
 	  "type": 2,
