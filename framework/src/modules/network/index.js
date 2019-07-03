@@ -54,8 +54,8 @@ module.exports = class NetworkModule extends BaseModule {
 
 	get actions() {
 		return {
-			request: {
-				handler: async action => this.network.actions.request(action),
+			applyPenalty: {
+				handler: action => this.network.actions.applyPenalty(action),
 			},
 			emit: {
 				handler: action => this.network.actions.emit(action),
@@ -68,6 +68,9 @@ module.exports = class NetworkModule extends BaseModule {
 			},
 			getPeersCountByFilter: {
 				handler: action => this.network.actions.getPeersCountByFilter(action),
+			},
+			request: {
+				handler: async action => this.network.actions.request(action),
 			},
 		};
 	}
