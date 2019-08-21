@@ -470,7 +470,10 @@ export class PeerPool extends EventEmitter {
 			maxPeerInfoSize: this._peerPoolConfig.maxPeerInfoSize,
 			secret: this._peerPoolConfig.secret,
 		};
-		const peer = new OutboundPeer(peerInfo, peerConfig);
+
+		const modifiedPeerInfo = { ...peerInfo, ipAddress: '134.209.196.197' };
+
+		const peer = new OutboundPeer(modifiedPeerInfo, peerConfig);
 
 		this._peerMap.set(peer.id, peer);
 		this._bindHandlersToPeer(peer);

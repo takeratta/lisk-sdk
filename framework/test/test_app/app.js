@@ -42,7 +42,7 @@ if (process.env.NODE_ENV === 'test' && process.env.PROTOCOL_VERSION) {
 	appConfig.app.protocolVersion = process.env.PROTOCOL_VERSION;
 }
 
-const network = process.env.LISK_NETWORK || 'devnet';
+const network = 'devnet';
 
 try {
 	// TODO: I would convert config.json to .JS
