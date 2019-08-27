@@ -12,9 +12,9 @@
  * Removal or modification of this copyright notice is prohibited.
  *
  */
-import { P2PDiscoveredPeerInfo, P2PPeerInfo } from '../p2p_types';
+import { P2PPeerInfo } from '../p2p_types';
 import { constructPeerIdFromPeerInfo } from '../utils';
-import { AddPeerOutcome, BasePeerList, PeerListConfig } from './basePeerList';
+import { BasePeerList, CustomPeerInfo, PeerListConfig } from './basePeerList';
 
 export const DEFAULT_TRIED_BUCKET_LENGTH = 64;
 export const DEFAULT_TRIED_BUCKET_SIZE = 32;
@@ -24,11 +24,9 @@ export interface TriedPeerConfig extends PeerListConfig {
 	readonly maxReconnectTries?: number;
 }
 
-interface TriedPeerInfo {
-	readonly peerInfo: P2PDiscoveredPeerInfo;
+interface TriedPeerInfo extends CustomPeerInfo {
 	// tslint:disable-next-line:readonly-keyword
 	numOfConnectionFailures: number;
-	readonly dateAdded: Date;
 }
 
 type TriedPeerMap = Map<number, Map<string, TriedPeerInfo>>;
@@ -75,49 +73,12 @@ export class TriedPeers extends BasePeerList {
 		};
 	}
 
-	// Addition of peer can also result in peer eviction if the bucket of the incoming peer is already full based on evection strategy.
-	public addPeer(peerInfo: P2PDiscoveredPeerInfo): AddPeerOutcome {
-		const bucketId = this.getBucketId(peerInfo.ipAddress);
-		const bucket = this.peerMap.get(bucketId);
-		const incomingPeerId = constructPeerIdFromPeerInfo(peerInfo);
-
-		if (!bucket) {
-			return {
-				success: false,
-				isEvicted: false,
-			};
-		}
-
-		if (bucket && bucket.get(incomingPeerId)) {
-			return {
-				success: false,
-				isEvicted: false,
-			};
-		}
-		const newTriedPeerInfo = {
-			peerInfo,
-			numOfConnectionFailures: 0,
-			dateAdded: new Date(),
-		};
-		if (bucket.size < this.peerListConfig.peerBucketSize) {
-			bucket.set(incomingPeerId, newTriedPeerInfo);
-			this.peerMap.set(bucketId, bucket);
-
-			return {
-				success: true,
-				isEvicted: false,
-			};
-		}
-		const evictedPeer = this.evictRandomlyFromBucket(bucketId);
-		bucket.set(incomingPeerId, newTriedPeerInfo);
-		this.peerMap.set(bucketId, bucket);
-
-		return {
-			success: true,
-			isEvicted: true,
-			evictedPeer: evictedPeer.peerInfo,
-		};
-	}
+	// Extend to add custom TriedPeerInfo
+	public initPeerInfo = (peerInfo: P2PPeerInfo): TriedPeerInfo => ({
+		peerInfo,
+		numOfConnectionFailures: 0,
+		dateAdded: new Date(),
+	});
 
 	// Should return true if the peer is evicted due to failed connection
 	public failedConnectionAction(incomingPeerInfo: P2PPeerInfo): boolean {
