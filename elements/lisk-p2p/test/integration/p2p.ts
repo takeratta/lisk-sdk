@@ -30,7 +30,7 @@ import { SCServerSocket } from 'socketcluster-server';
 import * as url from 'url';
 import cloneDeep = require('lodash.clonedeep');
 
-describe.skip('Integration tests for P2P library', () => {
+describe('Integration tests for P2P library', () => {
 	before(() => {
 		// Make sure that integration tests use real timers.
 		sandbox.restore();
