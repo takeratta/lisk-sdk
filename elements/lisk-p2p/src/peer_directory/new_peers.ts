@@ -12,7 +12,7 @@
  * Removal or modification of this copyright notice is prohibited.
  *
  */
-import { BasePeerList, CustomPeerInfo, PeerListConfig } from './basePeerList';
+import { BasePeerList, CustomPeerInfo, PeerListConfig } from './base_list';
 
 export const DEFAULT_NEW_BUCKET_COUNT = 128;
 export const DEFAULT_NEW_BUCKET_SIZE = 32;

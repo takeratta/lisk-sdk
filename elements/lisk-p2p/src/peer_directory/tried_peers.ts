@@ -14,7 +14,7 @@
  */
 import { P2PPeerInfo } from '../p2p_types';
 import { constructPeerIdFromPeerInfo } from '../utils';
-import { BasePeerList, CustomPeerInfo, PeerListConfig } from './basePeerList';
+import { BasePeerList, CustomPeerInfo, PeerListConfig } from './base_list';
 
 export const DEFAULT_TRIED_BUCKET_LENGTH = 64;
 export const DEFAULT_TRIED_BUCKET_SIZE = 32;
