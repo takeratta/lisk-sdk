@@ -108,6 +108,7 @@ interface PeerPoolConfig {
 	readonly wsMaxMessageRatePenalty: number;
 	readonly rateCalculationInterval: number;
 	readonly secret: number;
+	readonly outboundUpdateStatusInterval: number;
 }
 
 export const MAX_PEER_LIST_BATCH_SIZE = 100;
@@ -188,6 +189,7 @@ export class PeerPool extends EventEmitter {
 	private readonly _peerSelectForConnection: P2PPeerSelectionForConnectionFunction;
 	private readonly _sendPeerLimit: number;
 	private readonly _outboundShuffleIntervalId: NodeJS.Timer | undefined;
+	private readonly _outboundUpdateStatusId: NodeJS.Timer;
 
 	public constructor(peerPoolConfig: PeerPoolConfig) {
 		super();
@@ -202,6 +204,12 @@ export class PeerPool extends EventEmitter {
 		this._outboundShuffleIntervalId = setInterval(() => {
 			this._evictPeer(OutboundPeer);
 		}, peerPoolConfig.outboundShuffleInterval);
+		this._outboundUpdateStatusId = setInterval(() => {
+			// tslint:disable-next-line: no-floating-promises
+			(async () => {
+				await this._updateOutboundConnections();
+			})();
+		}, peerPoolConfig.outboundUpdateStatusInterval);
 
 		// This needs to be an arrow function so that it can be used as a listener.
 		this._handlePeerRPC = (request: P2PRequest) => {
@@ -509,6 +517,7 @@ export class PeerPool extends EventEmitter {
 		// Clear periodic eviction of outbound peers for shuffling
 		if (this._outboundShuffleIntervalId) {
 			clearInterval(this._outboundShuffleIntervalId);
+			clearInterval(this._outboundUpdateStatusId);
 		}
 
 		this._peerMap.forEach((peer: Peer) => {
@@ -679,6 +688,22 @@ export class PeerPool extends EventEmitter {
 					`Evicted inbound peer ${peerToEvict.id}`,
 				);
 			}
+		}
+	}
+
+	private async _updateOutboundConnections(): Promise<void> {
+		try {
+			await Promise.all(
+				this.getConnectedPeers(OutboundPeer)
+					.filter(
+						peer =>
+							peer instanceof OutboundPeer &&
+							peer.state === ConnectionState.OPEN,
+					)
+					.map(async peer => peer.fetchStatus().catch(err => err)),
+			);
+		} catch (err) {
+			return;
 		}
 	}
 
