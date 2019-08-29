@@ -730,13 +730,9 @@ export class P2P extends EventEmitter {
 					return;
 				}
 
-				const existingPeer = this._peerPool.getPeer(peerId);
-
-				if (!existingPeer) {
-					this._peerPool.addInboundPeer(incomingPeerInfo, socket);
-					this.emit(EVENT_NEW_INBOUND_PEER, incomingPeerInfo);
-					this.emit(EVENT_NEW_PEER, incomingPeerInfo);
-				}
+				this._peerPool.addInboundPeer(incomingPeerInfo, socket);
+				this.emit(EVENT_NEW_INBOUND_PEER, incomingPeerInfo);
+				this.emit(EVENT_NEW_PEER, incomingPeerInfo);
 
 				if (!this._peerBook.getPeer(incomingPeerInfo)) {
 					this._peerBook.addPeer(incomingPeerInfo);
