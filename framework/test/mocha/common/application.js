@@ -79,6 +79,8 @@ const initStepsForTest = {
 			logger: scope.components.logger,
 			slots: scope.slots,
 			storage: scope.components.storage,
+			activeDelegates: __testContext.config.constants.ACTIVE_DELEGATES,
+			exceptions: __testContext.config.modules.chain.exceptions,
 		});
 
 		const { Blocks: RewiredBlocks } = rewire(
@@ -92,6 +94,7 @@ const initStepsForTest = {
 			slots: scope.slots,
 			exceptions: __testContext.config.modules.chain.exceptions,
 			roundsModule: modules.rounds,
+			dposModule: modules.dpos,
 			interfaceAdapters: modules.interfaceAdapters,
 			blockReceiptTimeout: __testContext.config.constants.BLOCK_RECEIPT_TIMEOUT,
 			loadPerIteration: 1000,
