@@ -432,15 +432,8 @@ export class PeerPool extends EventEmitter {
 	public addInboundPeer(
 		peerInfo: P2PDiscoveredPeerInfo,
 		socket: SCServerSocket,
-	): Peer {
+	): Peer | undefined {
 		const inboundPeers = this.getPeers(InboundPeer);
-		const peerId = constructPeerIdFromPeerInfo(peerInfo);
-
-		if (this._peerMapDuplicates.has(peerId) && this._peerMap.has(peerId)) {
-			throw new Error(
-				`Peer ${peerId} already has inbound and outbound connections.`,
-			);
-		}
 
 		if (inboundPeers.length >= this._maxInboundConnections) {
 			this._evictPeer(InboundPeer);
@@ -463,7 +456,7 @@ export class PeerPool extends EventEmitter {
 		// For older versions allow them to make an inbound connection even if they have an outbound
 		if (this._peerMap.has(peer.id) && !this._peerMapDuplicates.has(peer.id)) {
 			this._peerMapDuplicates.set(peer.id, peer);
-		} else if (!this._peerMap.has(peer.id)) {
+		} else if (this._peerMap.has(peer.id)) {
 			this._peerMap.set(peer.id, peer);
 		}
 
@@ -589,6 +582,10 @@ export class PeerPool extends EventEmitter {
 
 	public getPeer(peerId: string): Peer | undefined {
 		return this._peerMap.get(peerId);
+	}
+
+	public getDuplicatePeer(peerId: string): Peer | undefined {
+		return this._peerMapDuplicates.get(peerId);
 	}
 
 	public hasPeer(peerId: string): boolean {

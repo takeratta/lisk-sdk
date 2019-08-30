@@ -35,6 +35,10 @@ export const INCOMPATIBLE_PEER_CODE = 4104;
 export const INCOMPATIBLE_PEER_UNKNOWN_REASON =
 	'Peer is incompatible with the node for unknown reasons';
 
+export const DUPLICATE_INBOUND_CONNECTION = 4105;
+export const DUPLICATE_INBOUND_CONNECTION_REASON =
+	'Peer already has an inbound connection';
+
 // First case to follow HTTP status codes
 export const FORBIDDEN_CONNECTION = 4403;
 export const FORBIDDEN_CONNECTION_REASON = 'Peer is not allowed to connect';
