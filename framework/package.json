@@ -69,7 +69,7 @@
 		"express-query-int": "3.0.0",
 		"express-rate-limit": "2.8.0",
 		"fs-extra": "7.0.1",
-		"ip": "1.1.5",
+		"ip": "1.1.9",
 		"js-yaml": "3.13.1",
 		"json-refs": "3.0.12",
 		"lisk-newrelic": "LiskHQ/lisk-newrelic#e512ac7",
