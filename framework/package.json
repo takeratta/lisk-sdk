@@ -87,7 +87,7 @@
 		"sodium-native": "2.4.6",
 		"swagger-node-runner": "0.7.3",
 		"sway": "2.0.5",
-		"yargs": "13.2.2",
+		"yargs": "13.3.0",
 		"z-schema": "3.24.2"
 	},
 	"devDependencies": {
