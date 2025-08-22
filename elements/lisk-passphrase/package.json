@@ -61,7 +61,7 @@
 	"dependencies": {
 		"@types/bip39": "2.4.1",
 		"@types/node": "10.12.21",
-		"bip39": "2.5.0"
+		"bip39": "3.1.0"
 	},
 	"devDependencies": {
 		"@types/chai": "4.1.7",
