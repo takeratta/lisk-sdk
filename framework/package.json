@@ -88,7 +88,7 @@
 		"swagger-node-runner": "0.7.3",
 		"sway": "2.0.5",
 		"yargs": "13.2.2",
-		"z-schema": "3.24.2"
+		"z-schema": "4.2.4"
 	},
 	"devDependencies": {
 		"@liskhq/lisk-passphrase": "2.0.1",
